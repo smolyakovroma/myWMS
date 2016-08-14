@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:p="http://primefaces.org/ui">
+<h:head>
+
+</h:head>
+<h:body>
+    <h:form id="form">
+        <p:growl id="msgs" showDetail="true"/>
+        <!--<p:dataTable id="eventsDT" var="car" value="#{dtSelectionView.cars3}" selectionMode="single"-->
+                     <!--selection="#{dtSelectionView.selectedCar}" rowKey="#{car.id}"-->
+                     <!--resizableColumns="true" draggableColumns="true" style="margin-bottom:20px"-->
+                     <!--editable="true" editMode="cell">-->
+            <!--<f:facet name="header">-->
+                <!--Select Events-->
+            <!--</f:facet>-->
+            <!--<p:ajax event="rowSelect" listener="#{dtSelectionView.onRowSelect}" update=":form:msgs"/>-->
+            <!--<p:ajax event="rowUnselect" listener="#{dtSelectionView.onRowUnselect}" update=":form:msgs"/>-->
+            <!--<p:column headerText="Id">-->
+                <!--<h:outputText value="#{car.id}"/>-->
+            <!--</p:column>-->
+            <!--<p:column headerText="Year">-->
+                <!--<h:outputText value="#{car.year}"/>-->
+            <!--</p:column>-->
+
+            <!--<p:column headerText="Color">-->
+                <!--<h:outputText value="#{car.color}"/>-->
+            <!--</p:column>-->
+        <!--</p:dataTable>-->
+
+        <p:dataTable id="tableDoc" var="line" value="#{documentController.tableDoc}"
+                     selectionMode="single" rowKey="#{line.id}"
+                     selection="#{documentController.selectedTableValue}"
+                 >
+            <f:facet name="header">
+                Товары
+
+
+            </f:facet>
+            <p:ajax event="rowSelect" update=":form:msgs"/>
+            <!--<p:ajax event="rowUnselect" listener="#{documentController.onRowUnselect}" update=":form:msgs"/>-->
+            <p:column headerText="#" >
+                <h:outputText value="#{line.position}"/>
+
+            </p:column>
+
+            <p:column headerText="name" >
+                <h:outputText value="#{line.stock.name}"/>
+
+            </p:column>
+
+            <p:column headerText="amount" >
+
+                <h:outputText value="#{line.amount}"/>
+            </p:column>
+
+        </p:dataTable>
+    </h:form>
+</h:body>
+</html>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:p="http://primefaces.org/ui">
+<h:head>
+
+</h:head>
+<h:body>
+    <div>
+        <h:form id="form">
+            <div style="left: 70%">
+                <p:commandButton actionListener="#{documentController.saveFromDocument}" value="Save"/>
+                <p:commandButton actionListener="#{documentController.closeFromDocument}" value="Close"/>
+                <br/>
+                <p:outputLabel for="date_doc" value="Datetime:"/>
+                <p:calendar id="date_doc" value="#{documentController.selectedDocument.dateDoc}"
+                            pattern="dd-MM-yyyy HH:mm:ss" mask="true"
+                            showOn="button"/>
+                <br/>
+                <p:outputLabel for="id_doc" value="ID:"/>
+                <p:inputText id="id_doc" value="#{documentController.selectedDocument.id}"/>
+                <br/>
+            </div>
+            <p:contextMenu for="tableDoc">
+                <!--<p:menuitem value="View" update="cars" icon="ui-icon-search" actionListener="#{dtContextMenuView.openDoc}"/>-->
+                <p:menuitem value="MoveUp" update=":form:tableDoc" actionListener="#{documentController.moveup}" icon="ui-icon-up"
+                            />
+                <p:menuitem value="MoveDown" update=":form:tableDoc" actionListener="#{documentController.movedown}" icon="ui-icon-dowm"
+                            />
+                <p:menuitem value="Delete" update=":form:tableDoc" icon="ui-icon-delete"
+                            actionListener="#{documentController.deleteTableValue}">
+                    <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}" />
+                        </p:menuitem>
+            </p:contextMenu>
+
+            <p:dataTable id="tableDoc" var="line" value="#{documentController.tableDoc}"
+                         selectionMode="single"
+                         selection="#{documentController.selectedTableValue}"
+                         resizableColumns="true" draggableColumns="true" style="margin-bottom:20px"
+                         rowKey="#{line.id}" editable="true" editMode="cell">
+                <f:facet name="header">
+                    Товары
+
+                    <p:commandButton value="Edit columns" id="toggler" type="l" style="float:right;font-size:65%"
+                                     icon="ui-icon-calculator"/>
+                    <p:columnToggler datasource="tableDoc" trigger="toggler"/>
+                </f:facet>
+
+                <p:ajax event="rowSelect" update=":form:tableDoc"/>
+                <!--<p:ajax event="rowDblselect" listener="#{documentController.openDocument()}"/>-->
+
+                <p:column headerText="#" sortBy="#{line.position}">
+                    <h:outputText value="#{line.position}"/>
+
+                </p:column>
+
+                <p:column headerText="stock" sortBy="#{line.stock.name}">
+
+                    <h:outputText value="#{line.stock.name}"/>
+                    <p:commandButton update=":form:tableDoc" oncomplete="PF('stockDialog').show()"
+                                     icon="ui-icon-search" style="float: right; cursor: pointer;">
+                        <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}" />
+                    </p:commandButton>
+                </p:column>
+
+                <p:column headerText="amount" sortBy="#{line.amount}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{line.amount}"/></f:facet>
+                        <f:facet name="input"><p:inputText value="#{line.amount}" style="width:100%"
+                                                           label="amount">
+                        </p:inputText></f:facet>
+                    </p:cellEditor>
+                </p:column>
+
+            </p:dataTable>
+
+            <p:dialog header="Stock" widgetVar="stockDialog" modal="true" showEffect="fade" hideEffect="fade"
+                      resizable="true" width="70%" height="80%">
+                <p:commandButton update=":form" oncomplete="PF('stockDialog').hide(); PF('stockAddDialog').show()"
+                                 value="Add" icon="ui-icon-plus" style=" cursor: pointer; "/>
+                <br/>
+                <p:dataTable id="stockList" var="stock" value="#{documentController.stockList}"
+                             selectionMode="single"
+                             rowKey="#{stock.id}" dblClickSelect="true"
+                             selection="#{documentController.selectedStock}">
+                    <p:ajax event="rowDblselect" listener="#{documentController.pickStockValue}"
+                            oncomplete="PF('stockDialog').hide()" update=":form:tableDoc"/>
+                    <p:column headerText="Id">
+                        <h:outputText value="#{stock.id}"/>
+                    </p:column>
+                    <p:column headerText="Name">
+                        <h:outputText value="#{stock.name}"/>
+                    </p:column>
+                    <p:column headerText="Service">
+                        <h:outputText value="#{stock.service}"/>
+                    </p:column>
+
+                </p:dataTable>
+
+            </p:dialog>
+
+            <p:dialog header="AddStock" widgetVar="stockAddDialog" modal="true" showEffect="fade" hideEffect="fade"
+                      resizable="true" width="70%" height="80%">
+                <p:commandButton update=":form" oncomplete="PF('stockAddDialog').hide(); PF('stockDialog').show()"
+                                 value="Save" style=" cursor: pointer;" action="#{stock.saveStock}"/>
+                <p:outputLabel for="nameStock" value="Name:"/>
+                <h:inputText value="#{stock.name}" id="nameStock"/>
+                <p:outputLabel for="serviceStock" value="Service:"/>
+                <p:selectBooleanCheckbox value="#{stock.service}" id="serviceStock"/>
+
+            </p:dialog>
+
+            <div style="margin-right: 10px; right: 0%">
+                <p:outputLabel for="comment_doc" value="comment:"/>
+                <p:inputText id="comment_doc" value="#{documentController.selectedDocument.comment}"/>
+            </div>
+        </h:form>
+    </div>
+</h:body>
+</html>

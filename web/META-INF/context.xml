@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="/">
+    <WatchedResource>WEB-INF/web.xml</WatchedResource>
+    <WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>
+
+    <Resource name="jdbc/wms"
+              auth="Container"
+              type="javax.sql.DataSource"
+              maxActive="5"  minIdle="1"  maxWait="100000"
+              initialSize="3" maxPoolSize="5" minPoolSize="1"  maxConnectionAge="0"
+              maxIdleTime="1800"  maxIdleTimeExcessConnections="120" idleConnectionTestPeriod="30"
+              acquireIncrement="1"     testConnectionOnCheckout="true"
+              removeAbandoned="true"   logAbandoned="true"
+              username="root"
+              password="root"
+              driverClassName="com.mysql.jdbc.Driver"
+              url="jdbc:mysql://localhost:3306/wms"/>
+</Context>
