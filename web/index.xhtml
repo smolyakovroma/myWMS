@@ -9,7 +9,30 @@
 
 </h:head>
 <h:body>
+
+
+
+
     <h:form id="form">
+
+        <p:menubar>
+            <p:submenu label="References">
+                <p:menuitem value="Stocks" url="#"/>
+                <p:menuitem value="Warehouses" url="#"/>
+            </p:submenu>
+            <p:submenu label="Documents">
+                <p:menuitem value="Income" url="#"></p:menuitem>
+                <p:menuitem value="Outcome" url="#"></p:menuitem>
+                <p:menuitem value="Displacement" url="#"></p:menuitem>
+            </p:submenu>
+            <p:submenu label="Reports">
+                <p:menuitem value="Reports1" url="#" />
+
+            </p:submenu>
+
+        </p:menubar>
+        <br/>
+
         <p:growl id="msgs" showDetail="true"/>
 
         <p:contextMenu for="documents">
@@ -54,7 +77,8 @@
             <!--<h:outputText value="#{car.color}"/>-->
             <!--</p:column>-->
         </p:dataTable>
-
+        <p:clock pattern="HH:mm:ss dd.MM.yyyy" mode="server" />
     </h:form>
+
 </h:body>
 </html>

@@ -9,6 +9,7 @@
 </h:head>
 <h:body>
     <div>
+
         <h:form id="form">
             <div style="left: 70%">
                 <p:commandButton actionListener="#{documentController.saveFromDocument}" value="Save"/>
@@ -16,30 +17,36 @@
                 <br/>
                 <p:outputLabel for="date_doc" value="Datetime:"/>
                 <p:calendar id="date_doc" value="#{documentController.selectedDocument.dateDoc}"
-                            pattern="dd-MM-yyyy HH:mm:ss" mask="true"
+                            pattern="dd.MM.yyyy HH:mm:ss" mask="true"
                             showOn="button"/>
                 <br/>
                 <p:outputLabel for="id_doc" value="ID:"/>
                 <p:inputText id="id_doc" value="#{documentController.selectedDocument.id}"/>
                 <br/>
+                <p:outputLabel for="id_warehouse" value="Warehouse:"/>
+                <p:inputText readonly="true" id="id_warehouse" value="#{documentController.selectedWarehouse.name}"/>
+                <p:commandButton id="warehouse_btn" update=":form:id_warehouse" oncomplete="PF('warehouseDialog').show()"
+                                 icon="ui-icon-search" style="cursor: pointer;" />
+                <br/>
             </div>
             <p:contextMenu for="tableDoc">
                 <!--<p:menuitem value="View" update="cars" icon="ui-icon-search" actionListener="#{dtContextMenuView.openDoc}"/>-->
-                <p:menuitem value="MoveUp" update=":form:tableDoc" actionListener="#{documentController.moveup}" icon="ui-icon-up"
-                            />
-                <p:menuitem value="MoveDown" update=":form:tableDoc" actionListener="#{documentController.movedown}" icon="ui-icon-dowm"
-                            />
-                <p:menuitem value="Delete" update=":form:tableDoc" icon="ui-icon-delete"
-                            actionListener="#{documentController.deleteTableValue}">
-                    <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}" />
-                        </p:menuitem>
+                <p:menuitem value="Add"  actionListener="#{documentController.addTableValue}" icon="ui-icon-plus" oncomplete="PF('dt').addRow()" process="@this"/>
+                <p:menuitem value="MoveUp" update=":form:tableDoc" actionListener="#{documentController.moveUp}" icon="ui-icon-up"/>
+                <p:menuitem value="MoveDown" update=":form:tableDoc" actionListener="#{documentController.moveDown}" icon="ui-icon-dowm"/>
+                <p:menuitem value="Delete" update=":form:tableDoc" icon="ui-icon-delete" actionListener="#{documentController.deleteTableValue}">
+                    <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}"/>
+                </p:menuitem>
             </p:contextMenu>
+
+            <br/>
+            <p:commandButton actionListener="#{documentController.addTableValue}" value="Add" oncomplete="PF('dt').addRow()" process="@this"/>
 
             <p:dataTable id="tableDoc" var="line" value="#{documentController.tableDoc}"
                          selectionMode="single"
                          selection="#{documentController.selectedTableValue}"
                          resizableColumns="true" draggableColumns="true" style="margin-bottom:20px"
-                         rowKey="#{line.id}" editable="true" editMode="cell">
+                         rowKey="#{line.position}" editable="true" editMode="cell" widgetVar="dt">
                 <f:facet name="header">
                     Товары
 
@@ -48,7 +55,7 @@
                     <p:columnToggler datasource="tableDoc" trigger="toggler"/>
                 </f:facet>
 
-                <p:ajax event="rowSelect" update=":form:tableDoc"/>
+                <!--<p:ajax event="rowSelect" update=":form:tableDoc"/>-->
                 <!--<p:ajax event="rowDblselect" listener="#{documentController.openDocument()}"/>-->
 
                 <p:column headerText="#" sortBy="#{line.position}">
@@ -58,10 +65,10 @@
 
                 <p:column headerText="stock" sortBy="#{line.stock.name}">
 
-                    <h:outputText value="#{line.stock.name}"/>
+                    <h:outputText value="#{line.stock.name==null?documentController.emptyPosition:line.stock.name}"/>
                     <p:commandButton update=":form:tableDoc" oncomplete="PF('stockDialog').show()"
                                      icon="ui-icon-search" style="float: right; cursor: pointer;">
-                        <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}" />
+                        <f:setPropertyActionListener value="#{line}" target="#{documentController.selectedTableValue}"/>
                     </p:commandButton>
                 </p:column>
 
@@ -101,15 +108,49 @@
 
             </p:dialog>
 
+
             <p:dialog header="AddStock" widgetVar="stockAddDialog" modal="true" showEffect="fade" hideEffect="fade"
-                      resizable="true" width="70%" height="80%">
+                      resizable="true" width="auto" height="auto">
                 <p:commandButton update=":form" oncomplete="PF('stockAddDialog').hide(); PF('stockDialog').show()"
                                  value="Save" style=" cursor: pointer;" action="#{stock.saveStock}"/>
+                <br/><br/>
                 <p:outputLabel for="nameStock" value="Name:"/>
                 <h:inputText value="#{stock.name}" id="nameStock"/>
+                <br/><br/>
                 <p:outputLabel for="serviceStock" value="Service:"/>
                 <p:selectBooleanCheckbox value="#{stock.service}" id="serviceStock"/>
 
+            </p:dialog>
+
+            <p:dialog header="Warehouse" widgetVar="warehouseDialog" modal="true" showEffect="fade" hideEffect="fade"
+                      resizable="true" width="70%" height="80%">
+                <p:commandButton update=":form" oncomplete="PF('warehouseDialog').hide(); PF('warehouseAddDialog').show()"
+                                 value="Add" icon="ui-icon-plus" style=" cursor: pointer; "/>
+                <br/>
+                <p:dataTable id="warehouseList" var="warehouse" value="#{documentController.warehouseList}"
+                             selectionMode="single"
+                             rowKey="#{warehouse.id}" dblClickSelect="true"
+                             selection="#{documentController.selectedWarehouse}">
+                    <p:ajax event="rowDblselect"
+                            oncomplete="PF('warehouseDialog').hide()" update=":form:id_warehouse"/>
+                    <p:column headerText="Id">
+                        <h:outputText value="#{warehouse.id}"/>
+                    </p:column>
+                    <p:column headerText="Name">
+                        <h:outputText value="#{warehouse.name}"/>
+                    </p:column>
+
+                </p:dataTable>
+
+            </p:dialog>
+
+            <p:dialog header="AddWarehouse" widgetVar="warehouseAddDialog" modal="true" showEffect="fade" hideEffect="fade"
+                      resizable="true" width="auto" height="auto">
+                <p:commandButton update=":form" oncomplete="PF('warehouseAddDialog').hide(); PF('warehouseDialog').show()"
+                                 value="Save" style=" cursor: pointer;" action="#{warehouse.saveWarehouse}"/>
+                <br/><br/>
+                <p:outputLabel for="nameWarehouse" value="Name:"/>
+                <h:inputText value="#{warehouse.name}" id="nameWarehouse"/>
             </p:dialog>
 
             <div style="margin-right: 10px; right: 0%">
