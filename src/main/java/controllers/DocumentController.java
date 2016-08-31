@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,9 +43,11 @@ public class DocumentController implements Serializable {
 
     private String emptyPosition;
 
+    private String docType;
 
     public DocumentController() {
-        fillDocumentListAll();
+//        setDocumentType();
+//        fillDocumentListAll();
         this.emptyPosition = "empty";
 
     }
@@ -61,7 +64,7 @@ public class DocumentController implements Serializable {
             conn = Database.getConnection();
 
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("select t.id, t.id_stock, spr.name, spr.isService, t.position, t.amount from doc_income_table as t inner join spr_stock as spr on t.id_stock = spr.id where t.id_doc = "
+            rs = stmt.executeQuery("select t.id, t.id_stock, spr.name, spr.isService, t.position, t.amount from "+docType+"_table as t inner join spr_stock as spr on t.id_stock = spr.id where t.id_doc = "
                     + selectedDocument.getId().intValue()
                     + " order by t.position ");
 
@@ -96,6 +99,9 @@ public class DocumentController implements Serializable {
     }
 
     public void fillDocumentListAll() {
+
+//        setDocumentType();
+
         Statement stmt = null;
         ResultSet rs = null;
         Connection conn = null;
@@ -106,7 +112,7 @@ public class DocumentController implements Serializable {
             conn = Database.getConnection();
 
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("select * from doc_income order by date_doc");
+            rs = stmt.executeQuery("select * from "+docType+" order by date_doc");
             while (rs.next()) {
                 DocumentIncome doc = new DocumentIncome();
 //                doc.setDateDoc(rs.getDate("name"));
@@ -136,6 +142,7 @@ public class DocumentController implements Serializable {
     }
 
     public List<DocumentIncome> getDocumentList() {
+
         return documentList;
     }
 
@@ -217,22 +224,19 @@ public class DocumentController implements Serializable {
 
         FacesContext fc = FacesContext.getCurrentInstance();
         NavigationHandler nh = fc.getApplication().getNavigationHandler();
-        nh.handleNavigation(fc, null, "doc_income");
+        nh.handleNavigation(fc, null, docType);
 
-
-//        if (selectedDocument != null) {
-//            System.out.println(selectedDocument.getId());
-//            return "doc_income";
-//        }
-//        return "doc_income";
-
-//        ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
-//        RequestDispatcher dispatcher = ((ServletRequest) context.getRequest()).getRequestDispatcher("/pages/doc_income.xhtml");
-//        dispatcher.forward((ServletRequest) context.getRequest(), (ServletResponse) context.getResponse());
-//        FacesContext.getCurrentInstance().responseComplete();
-//        return null;
     }
 
+    public void newDocument() {
+        this.selectedDocument = new DocumentIncome();
+        this.tableDoc = new ArrayList<DocumentTableValue>();
+
+        FacesContext fc = FacesContext.getCurrentInstance();
+        NavigationHandler nh = fc.getApplication().getNavigationHandler();
+        nh.handleNavigation(fc, null, docType);
+
+    }
     public void onRowSelect(SelectEvent event) {
         FacesMessage msg = new FacesMessage("Document Selected", ((DocumentIncome) event.getObject()).getId().toString());
         FacesContext.getCurrentInstance().addMessage(null, msg);
@@ -351,6 +355,8 @@ public class DocumentController implements Serializable {
     }
 
     public List<Stock> getStockList() {
+        //TODO really need?
+//        this.selectedStock = null;
         fillStockListAll();
         return stockList;
     }
@@ -389,20 +395,42 @@ public class DocumentController implements Serializable {
         Connection conn = null;
         PreparedStatement preparedStatement = null;
 
-        String delete_doc_table_SQL = "DELETE FROM doc_income_table WHERE id_doc = " + selectedDocument.getId().intValue();
-        String update_doc = "UPDATE doc_income SET comment = ? WHERE id = " + selectedDocument.getId().intValue();
-//        String update_doc_table = "UPDATE doc_income_table SET id_stock = ?, position = ?, amount = ? WHERE id = ?";
-        String insert_doc_table_SQL = "INSERT INTO doc_income_table (id_doc, id_stock, amount, position) VALUES (?,?,?,?)";
+
+
+//        String update_doc_table = "UPDATE "+docType+"_table SET id_stock = ?, position = ?, amount = ? WHERE id = ?";
+        String insert_doc_table_SQL = "INSERT INTO "+docType+"_table (id_doc, id_stock, amount, position) VALUES (?,?,?,?)";
+        String insert_new_doc_SQL = "INSERT INTO "+docType+" (date_doc, comment, id_warehouse_to) VALUES (?, ?,?)";
+        String get_last_id_SQL = "SELECT max(id) as last_id FROM "+docType;
         try {
             conn = Database.getConnection();
 
-            preparedStatement = conn.prepareStatement(delete_doc_table_SQL);
-            preparedStatement.executeUpdate();
+            if(selectedDocument.getId()==null){
+                preparedStatement = conn.prepareStatement(insert_new_doc_SQL);
+                preparedStatement.setLong(1, selectedDocument.getDateDoc().getTime());
+                preparedStatement.setString(2, selectedDocument.getComment());
+                preparedStatement.setInt(3, selectedWarehouse.getId().intValue());
+                preparedStatement.executeUpdate();
 
-            preparedStatement = conn.prepareStatement(update_doc);
-            preparedStatement.setString(1, selectedDocument.getComment());
-            preparedStatement.executeUpdate();
+                stmt = conn.createStatement();
+                rs = stmt.executeQuery(get_last_id_SQL);
 
+                while (rs.next()) {
+                    selectedDocument.setId(rs.getLong(1));
+                }
+
+            }else {
+                String delete_doc_table_SQL = "DELETE FROM "+docType+"_table WHERE id_doc = " + selectedDocument.getId().intValue();
+                String update_doc_SQL = "UPDATE "+docType+" SET date_doc = ?, comment = ?, id_warehouse_to =? WHERE id = " + selectedDocument.getId().intValue();
+
+                preparedStatement = conn.prepareStatement(delete_doc_table_SQL);
+                preparedStatement.executeUpdate();
+
+                preparedStatement = conn.prepareStatement(update_doc_SQL);
+                preparedStatement.setLong(1, selectedDocument.getDateDoc().getTime());
+                preparedStatement.setString(2, selectedDocument.getComment());
+                preparedStatement.setInt(3, selectedWarehouse.getId().intValue());
+                preparedStatement.executeUpdate();
+            }
             for (DocumentTableValue value : tableDoc) {
                 preparedStatement = conn.prepareStatement(insert_doc_table_SQL);
                 preparedStatement.setInt(1, selectedDocument.getId().intValue());
@@ -427,6 +455,8 @@ public class DocumentController implements Serializable {
     }
 
     public List<Warehouse> getWarehouseList() {
+        //TODO really need?
+//        this.selectedWarehouse = null;
         fillWarehouseListAll();
         return warehouseList;
     }
@@ -441,5 +471,19 @@ public class DocumentController implements Serializable {
 
     public void setSelectedWarehouse(Warehouse selectedWarehouse) {
         this.selectedWarehouse = selectedWarehouse;
+    }
+
+    public String openDocumentList(String docType){
+        this.docType = docType;
+        fillDocumentListAll();
+        return docType+"_list";
+    }
+
+    protected void setDocumentType(){
+//        Map<String,String> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
+//        this.docType = params.get("docType");
+//        if(docType==null){
+//            this.docType="doc_income";
+//        }
     }
 }
